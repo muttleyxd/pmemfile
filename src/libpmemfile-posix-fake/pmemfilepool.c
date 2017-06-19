@@ -242,18 +242,8 @@ pmemfile_fstatat(PMEMfilepool *pfp, PMEMfile *dir, const char *path,
 	 * will set error code and return -1
 	 * Syscall param fstatat(file_name) points to unaddressable byte(s)
 	 */
-	if (on_valgrind && buf == NULL) {
+	if (on_valgrind && (buf == NULL || path == NULL)) {
 		errno = EFAULT;
-		return -1;
-	}
-
-	/*
-	 * When path is NULL fstatat returns EFAULT errno
-	 * instead of ENOENT errno expected by tes
-	 * hack for tests/posix/stat/stat.cpp - fstatat test
-	 */
-	if (path == NULL) {
-		errno = ENOENT;
 		return -1;
 	}
 
@@ -546,16 +536,6 @@ pmemfile_fallocate(PMEMfilepool *pfp, PMEMfile *file, int mode,
 	else
 		result = fallocate(file->fd, mode, offset, length);
 
-	/*
-	 * removing an interval, that overlaps with
-	 * the previously allocated interval without FL_KEEP_SIZE flag
-	 * is not allowed, however errno is set to EOPNOTSUPP
-	 * instead of EINVAL expected by test
-	 * hack for tests/posix/rw/rw.cpp - fallocate test
-	 */
-	if (result == -1 && errno == EOPNOTSUPP) {
-		errno = EINVAL;
-	}
 	return result;
 }
 
