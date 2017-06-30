@@ -46,7 +46,7 @@ public:
 	rw() : pmemfile_test(256 * 1024 * 1024)
 	{
 		// disable stat block count checking with libpmemfile-posix-fake
-		if (is_pmemfile_posix_fake)
+		if (is_pmemfile_pop)
 			env_block_size = 0x1234;
 	}
 
@@ -54,7 +54,7 @@ protected:
 	pmemfile_blkcnt_t
 	stat_block_count(PMEMfile *f)
 	{
-		if (is_pmemfile_posix_fake)
+		if (is_pmemfile_pop)
 			return 0;
 
 		pmemfile_stat_t stat_buf;

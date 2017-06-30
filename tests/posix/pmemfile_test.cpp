@@ -42,13 +42,13 @@
 #include "gtest/gtest.h"
 
 std::string global_path;
-bool is_pmemfile_posix_fake;
+bool is_pmemfile_pop;
 
 bool
 test_pmemfile_stats_match(PMEMfilepool *pfp, unsigned inodes, unsigned dirs,
 			  unsigned block_arrays, unsigned blocks)
 {
-	if (is_pmemfile_posix_fake)
+	if (is_pmemfile_pop)
 		return true;
 
 	struct pmemfile_stats stats;
@@ -252,11 +252,11 @@ test_compare_dirs(const std::map<std::string, file_attrs> &files,
 		}
 		const file_attrs &attrs = (*attrs_iter).second;
 
-		if (is_pmemfile_posix_fake && strcmp(c.name, "..") != 0) {
+		if (is_pmemfile_pop && strcmp(c.name, "..") != 0) {
 			if (!S_ISDIR(c.mode))
 				VAL_EXPECT_EQ(c.size, attrs.stat.st_size);
 			VAL_EXPECT_EQ(c.mode, attrs.stat.st_mode);
-		} else if (!is_pmemfile_posix_fake) {
+		} else if (!is_pmemfile_pop) {
 			VAL_EXPECT_EQ(c.mode, attrs.stat.st_mode);
 			VAL_EXPECT_EQ(c.nlink, attrs.stat.st_nlink);
 

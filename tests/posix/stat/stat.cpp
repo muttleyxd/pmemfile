@@ -88,7 +88,7 @@ test_stat(PMEMfilepool *pfp, const char *path, pmemfile_mode_t mode = 0,
 	if (ret)
 		return ret;
 
-	if (is_pmemfile_posix_fake) {
+	if (is_pmemfile_pop) {
 		EXPECT_EQ(mode, st.st_mode);
 		if (!S_ISDIR(st.st_mode))
 			EXPECT_EQ(size, st.st_size);
@@ -124,7 +124,7 @@ test_fstat(PMEMfilepool *pfp, PMEMfile *f, pmemfile_mode_t mode = 0,
 	if (ret)
 		return ret;
 
-	if (is_pmemfile_posix_fake) {
+	if (is_pmemfile_pop) {
 		EXPECT_EQ(mode, st.st_mode);
 		if (!S_ISDIR(st.st_mode))
 			EXPECT_EQ(size, st.st_size);
@@ -162,7 +162,7 @@ test_fstatat(PMEMfilepool *pfp, PMEMfile *dir, const char *path, int flags,
 	if (ret)
 		return ret;
 
-	if (is_pmemfile_posix_fake) {
+	if (is_pmemfile_pop) {
 		EXPECT_EQ(mode, st.st_mode);
 		if (!S_ISDIR(st.st_mode))
 			EXPECT_EQ(size, st.st_size);

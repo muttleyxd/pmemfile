@@ -76,7 +76,7 @@ void pmemfilepool_init(PMEMfilepool *pfp, const char *path, size_t poolsize);
 __attribute__((constructor)) void
 Main(void)
 {
-	setenv("LIBPMEMFILE_POSIX_FAKE", "1", 0);
+	setenv("LIBPMEMFILE_POP", "1", 0);
 	on_valgrind = RUNNING_ON_VALGRIND;
 }
 
@@ -152,13 +152,7 @@ pmemfile_open(PMEMfilepool *pfp, const char *pathname, int flags, ...)
 			!(flags & PMEMFILE_O_TMPFILE))
 		flags = PMEMFILE_O_DIRECTORY;
 
-	/*
-	 * some tests create files as 0777
-	 * hack for all tests using pmemfile_open
-	 */
-	mode_t previous_umask_value = umask(0);
 	int result = open(fixed_path, flags, mode);
-	umask(previous_umask_value);
 
 	free(fixed_path);
 	free(full_path);
@@ -335,14 +329,7 @@ pmemfile_mkdir(PMEMfilepool *pfp, const char *path, mode_t mode)
 	}
 
 	char *full_path = merge_paths(pfp->pool_path, path);
-
-	/*
-	 * libpmemfile-posix does not support umask
-	 * hack for any test using pmemfile_mkdir
-	 */
-	mode_t previous_umask = umask(0);
 	int result = mkdir(full_path, mode);
-	umask(previous_umask);
 	free(full_path);
 
 	return result;
@@ -1378,16 +1365,6 @@ pmemfile_futimes(PMEMfilepool *pfp, PMEMfile *file,
 		return -1;
 	}
 
-	/*
-	 * using futimes on O_RDONLY flagged file is possible in POSIX
-	 * but is not possible in libpmemfile-posix
-	 * hack for tests/posix/timestamps/timestamps.cpp - futimes test
-	 */
-	if (file->flags == PMEMFILE_O_RDONLY) {
-		errno = EBADF;
-		return -1;
-	}
-
 	return futimes(file->fd, tv);
 }
 
@@ -1433,14 +1410,6 @@ pmemfile_utimensat(PMEMfilepool *pfp, PMEMfile *dir, const char *pathname,
 		fd = AT_FDCWD;
 	else if (dir != NULL)
 		fd = dir->fd;
-	if (fd != 0) {
-		struct stat st;
-		int result = fstatat(fd, pathname, &st, 0);
-		if (result == 0 && (st.st_mode & S_IWRITE) != S_IWRITE) {
-			errno = EACCES;
-			return -1;
-		}
-	}
 
 	return utimensat(fd, pathname, times, flags);
 }
@@ -1451,16 +1420,6 @@ pmemfile_futimens(PMEMfilepool *pfp, PMEMfile *file,
 {
 	if (pfp == NULL || file == NULL) {
 		errno = EFAULT;
-		return -1;
-	}
-
-	/*
-	 * using futimens on O_RDONLY flagged file is possible in POSIX
-	 * but is not possible in libpmemfile-posix
-	 * hack for tests/posix/timestamps/timestamps.cpp - futimens test
-	 */
-	if (file->flags == PMEMFILE_O_RDONLY) {
-		errno = EBADF;
 		return -1;
 	}
 

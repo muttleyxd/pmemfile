@@ -43,11 +43,11 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 add_library(pmemfile-posix_o OBJECT ${SOURCES})
 
 add_library(pmemfile-posix_shared SHARED $<TARGET_OBJECTS:pmemfile-posix_o>)
-target_include_directories(pmemfile-posix_o PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ..)
+target_include_directories(pmemfile-posix_o PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ../../src)
 
 target_link_libraries(pmemfile-posix_shared PRIVATE ${CMAKE_THREAD_LIBS_INIT})
-target_link_libraries(pmemfile-posix_shared PRIVATE -Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/../libpmemfile-posix/libpmemfile-posix.map)
-set_target_properties(pmemfile-posix_shared PROPERTIES LINK_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../libpmemfile-posix/libpmemfile-posix.map)
+target_link_libraries(pmemfile-posix_shared PRIVATE -Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/../../src/libpmemfile-posix/libpmemfile-posix.map)
+set_target_properties(pmemfile-posix_shared PROPERTIES LINK_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../../src/libpmemfile-posix/libpmemfile-posix.map)
 
 set_target_properties(pmemfile-posix_shared PROPERTIES OUTPUT_NAME pmemfile-posix)
 set_target_properties(pmemfile-posix_shared PROPERTIES VERSION ${VERSION} SOVERSION ${VERSION_MAJOR})
