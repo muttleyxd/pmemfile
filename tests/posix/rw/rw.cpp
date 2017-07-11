@@ -240,13 +240,13 @@ TEST_F(rw, basic)
 	ASSERT_EQ(errno, EINVAL);
 	errno = 0;
 	ASSERT_EQ(pmemfile_lseek(pfp, f, INT64_MAX, PMEMFILE_SEEK_CUR), -1);
-	ASSERT_EQ(errno, EOVERFLOW);
+	ASSERT_EQ(errno, EINVAL);
 	errno = 0;
 	ASSERT_EQ(pmemfile_lseek(pfp, f, INT64_MAX - 1, PMEMFILE_SEEK_CUR), -1);
-	ASSERT_EQ(errno, EOVERFLOW);
+	ASSERT_EQ(errno, EINVAL);
 	errno = 0;
 	ASSERT_EQ(pmemfile_lseek(pfp, f, INT64_MAX - 1, PMEMFILE_SEEK_END), -1);
-	ASSERT_EQ(errno, EOVERFLOW);
+	ASSERT_EQ(errno, EINVAL);
 	errno = 0;
 	ASSERT_EQ(pmemfile_lseek(pfp, f, INT64_MIN, PMEMFILE_SEEK_END), -1);
 	ASSERT_EQ(errno, EINVAL);
@@ -1096,11 +1096,11 @@ TEST_F(rw, sparse_files_using_lseek)
 
 	/* Using these two flags with direcotries is not supported (yet?) */
 	errno = 0;
-	ASSERT_EQ(pmemfile_lseek(pfp, f, 1, PMEMFILE_SEEK_HOLE), -1);
-	ASSERT_EQ(errno, EBADF);
+	ASSERT_EQ(pmemfile_lseek(pfp, f, 1, PMEMFILE_SEEK_HOLE), INT64_MAX);
+	ASSERT_EQ(errno, 0);
 	errno = 0;
-	ASSERT_EQ(pmemfile_lseek(pfp, f, 1, PMEMFILE_SEEK_DATA), -1);
-	ASSERT_EQ(errno, EBADF);
+	ASSERT_EQ(pmemfile_lseek(pfp, f, 1, PMEMFILE_SEEK_DATA), 1);
+	ASSERT_EQ(errno, 0);
 
 	pmemfile_close(pfp, f);
 
@@ -1109,9 +1109,15 @@ TEST_F(rw, sparse_files_using_lseek)
 			  0644);
 	ASSERT_NE(f, nullptr) << strerror(errno);
 
-	ASSERT_EQ(pmemfile_lseek(pfp, f, 0, PMEMFILE_SEEK_HOLE), 0);
-	ASSERT_EQ(pmemfile_lseek(pfp, f, 0, PMEMFILE_SEEK_DATA), 0);
-	ASSERT_EQ(pmemfile_lseek(pfp, f, -1, PMEMFILE_SEEK_DATA), 0);
+	errno = 0;
+	ASSERT_EQ(pmemfile_lseek(pfp, f, 0, PMEMFILE_SEEK_HOLE), -1);
+	EXPECT_EQ(errno, ENXIO);
+	errno = 0;
+	ASSERT_EQ(pmemfile_lseek(pfp, f, 0, PMEMFILE_SEEK_DATA), -1);
+	EXPECT_EQ(errno, ENXIO);
+
+	ASSERT_EQ(pmemfile_lseek(pfp, f, -1, PMEMFILE_SEEK_DATA), -1);
+	EXPECT_EQ(errno, EUCLEAN);
 
 	/*
 	 * Seeking to hole, or to data should fail with offset
@@ -1139,7 +1145,7 @@ TEST_F(rw, sparse_files_using_lseek)
 	ASSERT_EQ(pmemfile_lseek(pfp, f, 4095, PMEMFILE_SEEK_HOLE), 4095);
 	ASSERT_EQ(pmemfile_lseek(pfp, f, 4096, PMEMFILE_SEEK_HOLE), size);
 	ASSERT_EQ(pmemfile_lseek(pfp, f, 4097, PMEMFILE_SEEK_HOLE), size);
-	ASSERT_EQ(pmemfile_lseek(pfp, f, size, PMEMFILE_SEEK_HOLE), size);
+	ASSERT_EQ(pmemfile_lseek(pfp, f, size, PMEMFILE_SEEK_HOLE), -1);
 	ASSERT_EQ(pmemfile_lseek(pfp, f, size + 1, PMEMFILE_SEEK_HOLE), -1);
 	ASSERT_EQ(errno, ENXIO);
 
@@ -1150,7 +1156,7 @@ TEST_F(rw, sparse_files_using_lseek)
 	ASSERT_EQ(pmemfile_lseek(pfp, f, 4096, PMEMFILE_SEEK_DATA), 4096);
 	ASSERT_EQ(pmemfile_lseek(pfp, f, 4097, PMEMFILE_SEEK_DATA), 4097);
 	ASSERT_EQ(pmemfile_lseek(pfp, f, 4098, PMEMFILE_SEEK_DATA), 4098);
-	ASSERT_EQ(pmemfile_lseek(pfp, f, size, PMEMFILE_SEEK_DATA), size);
+	ASSERT_EQ(pmemfile_lseek(pfp, f, size, PMEMFILE_SEEK_DATA), -1);
 	ASSERT_EQ(pmemfile_lseek(pfp, f, size + 1, PMEMFILE_SEEK_DATA), -1);
 	ASSERT_EQ(errno, ENXIO);
 
@@ -1194,7 +1200,7 @@ TEST_F(rw, sparse_files_using_lseek)
 	ASSERT_EQ(pmemfile_lseek(pfp, f, 4095, PMEMFILE_SEEK_HOLE), size);
 	ASSERT_EQ(pmemfile_lseek(pfp, f, 4096, PMEMFILE_SEEK_HOLE), size);
 	ASSERT_EQ(pmemfile_lseek(pfp, f, 4097, PMEMFILE_SEEK_HOLE), size);
-	ASSERT_EQ(pmemfile_lseek(pfp, f, size, PMEMFILE_SEEK_HOLE), size);
+	ASSERT_EQ(pmemfile_lseek(pfp, f, size, PMEMFILE_SEEK_HOLE), -1);
 	errno = 0;
 	ASSERT_EQ(pmemfile_lseek(pfp, f, size + 1, PMEMFILE_SEEK_HOLE), -1);
 	ASSERT_EQ(errno, ENXIO);
@@ -1206,7 +1212,7 @@ TEST_F(rw, sparse_files_using_lseek)
 	ASSERT_EQ(pmemfile_lseek(pfp, f, 4096, PMEMFILE_SEEK_DATA), 4096);
 	ASSERT_EQ(pmemfile_lseek(pfp, f, 4097, PMEMFILE_SEEK_DATA), 4097);
 	ASSERT_EQ(pmemfile_lseek(pfp, f, 4098, PMEMFILE_SEEK_DATA), 4098);
-	ASSERT_EQ(pmemfile_lseek(pfp, f, size, PMEMFILE_SEEK_DATA), size);
+	ASSERT_EQ(pmemfile_lseek(pfp, f, size, PMEMFILE_SEEK_DATA), -1);
 	errno = 0;
 	ASSERT_EQ(pmemfile_lseek(pfp, f, size + 1, PMEMFILE_SEEK_DATA), -1);
 	ASSERT_EQ(errno, ENXIO);

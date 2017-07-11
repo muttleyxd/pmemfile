@@ -415,73 +415,8 @@ pmemfile_lseek(PMEMfilepool *pfp, PMEMfile *file, pmemfile_off_t offset,
 	struct stat st;
 	fstat(file->fd, &st);
 
-	/*
-	 * PMEMFILE_SEEK_DATA with offset -1 returns -1
-	 * hack for tests/posix/rw/rw.cpp - sparse_files_using_lseek test
-	 */
-	if (!S_ISDIR(st.st_mode) && whence == PMEMFILE_SEEK_DATA &&
-			offset == -1) {
-		return 0;
-	}
-
-	/*
-	 * lseek returns int64 max value
-	 * hack for tests/posix/rw/rw.cpp - sparse_files_using_lseek test
-	 */
-	if (S_ISDIR(st.st_mode) &&
-		(whence == PMEMFILE_SEEK_DATA ||
-		whence == PMEMFILE_SEEK_HOLE)) {
-		errno = EBADF;
-		return -1;
-	}
-
-	/*
-	 * lseek returns int64 max value
-	 * hack for tests/posix/getdents/getdents.cpp - 1 test
-	 */
-	if (S_ISDIR(st.st_mode) && whence == PMEMFILE_SEEK_END) {
-		errno = EINVAL;
-		return -1;
-	}
-
-	/*
-	 * when offset is equal to file size, then lseek returns -1
-	 * hack for tests/posix/rw/rw.cpp - sparse_files_using_lseek test
-	 */
-	if (offset == st.st_size) {
-		return offset;
-	}
-
 	pmemfile_off_t ret = lseek64(file->fd, offset, whence);
 
-	switch (whence) {
-		case PMEMFILE_SEEK_SET:
-			break;
-		case PMEMFILE_SEEK_CUR:
-			/* hack for tests/posix/rw/rw.cpp - basic test */
-			if (ret < 0) {
-				if (offset < 0)
-					errno = EINVAL;
-				else
-					errno = EOVERFLOW;
-			}
-			break;
-		case PMEMFILE_SEEK_END:
-			/* hack for tests/posix/rw/rw.cpp - basic test */
-			if (ret < 0) {
-				if (offset < 0)
-					errno = EINVAL;
-				else
-					errno = EOVERFLOW;
-			}
-			break;
-		case PMEMFILE_SEEK_DATA:
-		case PMEMFILE_SEEK_HOLE:
-			break;
-		default:
-			errno = EINVAL;
-			break;
-	}
 	return ret;
 }
 
