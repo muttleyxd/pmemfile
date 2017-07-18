@@ -149,8 +149,11 @@ TEST_F(getdents, 1)
 	ASSERT_NE(f, nullptr) << strerror(errno);
 
 	errno = 0;
-	ASSERT_EQ(pmemfile_lseek(pfp, f, 0, PMEMFILE_SEEK_END), -1);
+	ASSERT_EQ(pmemfile_lseek(pfp, f, 1, PMEMFILE_SEEK_END), -1);
 	EXPECT_EQ(errno, EINVAL);
+
+	ASSERT_EQ(pmemfile_lseek(pfp, f, -1, PMEMFILE_SEEK_END), INT64_MAX - 1);
+	ASSERT_EQ(pmemfile_lseek(pfp, f, 0, PMEMFILE_SEEK_END), INT64_MAX);
 
 	char buf[32758];
 	struct linux_dirent *dirents = (struct linux_dirent *)buf;
@@ -173,6 +176,10 @@ TEST_F(getdents, 1)
 	errno = 0;
 	ASSERT_EQ(pmemfile_getdents(NULL, f, dirents, sizeof(buf)), -1);
 	EXPECT_EQ(errno, EFAULT);
+
+	ASSERT_EQ(pmemfile_getdents(pfp, f, dirents, sizeof(buf)), 0);
+
+	ASSERT_EQ(pmemfile_lseek(pfp, f, 0, PMEMFILE_SEEK_SET), 0);
 
 	int r = pmemfile_getdents(pfp, f, dirents, sizeof(buf));
 	ASSERT_GT(r, 0);

@@ -171,7 +171,7 @@ pmemfile_lseek_locked(PMEMfilepool *pfp, PMEMfile *file, pmemfile_off_t offset,
 	}
 
 	if (vinode_is_dir(file->vinode)) {
-		if (whence == PMEMFILE_SEEK_END) {
+		if (whence == PMEMFILE_SEEK_END && offset > 0) {
 			errno = EINVAL;
 			return -1;
 		}
@@ -217,15 +217,19 @@ pmemfile_lseek_locked(PMEMfilepool *pfp, PMEMfile *file, pmemfile_off_t offset,
 			}
 			break;
 		case PMEMFILE_SEEK_END:
-			os_rwlock_rdlock(&vinode->rwlock);
-			ret = (pmemfile_off_t)inode->size + offset;
-			os_rwlock_unlock(&vinode->rwlock);
-			if (ret < 0) {
-				/* Errors as in SEEK_CUR */
-				if (offset < 0)
-					new_errno = EINVAL;
-				else
-					new_errno = EOVERFLOW;
+			if (vinode_is_dir(file->vinode)) {
+				ret = (pmemfile_off_t)INT64_MAX + offset;
+			} else {
+				os_rwlock_rdlock(&vinode->rwlock);
+				ret = (pmemfile_off_t)inode->size + offset;
+				os_rwlock_unlock(&vinode->rwlock);
+				if (ret < 0) {
+					/* Errors as in SEEK_CUR */
+					if (offset < 0)
+						new_errno = EINVAL;
+					else
+						new_errno = EOVERFLOW;
+				}
 			}
 			break;
 		case PMEMFILE_SEEK_DATA:
