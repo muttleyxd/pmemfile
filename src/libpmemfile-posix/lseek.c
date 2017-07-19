@@ -172,8 +172,12 @@ pmemfile_lseek_locked(PMEMfilepool *pfp, PMEMfile *file, pmemfile_off_t offset,
 
 	if (vinode_is_dir(file->vinode)) {
 		if (whence == PMEMFILE_SEEK_END) {
-			errno = EINVAL;
-			return -1;
+			if (offset > 0) {
+				errno = EINVAL;
+				return -1;
+			}
+			else
+				return INT64_MAX + offset;
 		}
 	} else if (vinode_is_regular_file(file->vinode)) {
 		/* Nothing to do for now */

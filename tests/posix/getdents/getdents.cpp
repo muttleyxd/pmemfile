@@ -148,8 +148,11 @@ TEST_F(getdents, 1)
 				    PMEMFILE_O_DIRECTORY | PMEMFILE_O_RDONLY);
 	ASSERT_NE(f, nullptr) << strerror(errno);
 
+	ASSERT_EQ(pmemfile_lseek(pfp, f, -1, PMEMFILE_SEEK_END), INT64_MAX - 1);
+	ASSERT_EQ(pmemfile_lseek(pfp, f, 0, PMEMFILE_SEEK_END), INT64_MAX);
+
 	errno = 0;
-	ASSERT_EQ(pmemfile_lseek(pfp, f, 0, PMEMFILE_SEEK_END), -1);
+	ASSERT_EQ(pmemfile_lseek(pfp, f, 1, PMEMFILE_SEEK_END), -1);
 	EXPECT_EQ(errno, EINVAL);
 
 	char buf[32758];
