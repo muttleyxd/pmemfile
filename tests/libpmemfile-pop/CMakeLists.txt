@@ -138,17 +138,17 @@ join(";\n\t\t" LINKER_SCRIPT_EXPORTED_SYMBOLS "${EXPORTED_SYMBOLS}")
 join(";-G;" OBJDUMP_EXPORTED_SYMBOLS "${EXPORTED_SYMBOLS}")
 set(OBJDUMP_EXPORTED_SYMBOLS "-G;${OBJDUMP_EXPORTED_SYMBOLS}")
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/../../src/libpmemfile-posix/libpmemfile-posix.map.in libpmemfile-posix.map)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/../../src/libpmemfile-posix/libpmemfile-posix.map.in libpmemfile-pop.map)
 
-add_library(pmemfile-posix_shared SHARED ${SOURCES})
-target_include_directories(pmemfile-posix_shared PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ../../src)
+add_library(pmemfile-pop_shared SHARED ${SOURCES})
+target_include_directories(pmemfile-pop_shared PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ../../src)
 
-target_link_libraries(pmemfile-posix_shared PRIVATE ${CMAKE_THREAD_LIBS_INIT})
-target_link_libraries(pmemfile-posix_shared PRIVATE -Wl,--version-script=${CMAKE_CURRENT_BINARY_DIR}/libpmemfile-posix.map)
-set_target_properties(pmemfile-posix_shared PROPERTIES LINK_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/libpmemfile-posix.map)
+target_link_libraries(pmemfile-pop_shared PRIVATE ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(pmemfile-pop_shared PRIVATE -Wl,--version-script=${CMAKE_CURRENT_BINARY_DIR}/libpmemfile-pop.map)
+set_target_properties(pmemfile-pop_shared PROPERTIES LINK_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/libpmemfile-pop.map)
 
-set_target_properties(pmemfile-posix_shared PROPERTIES OUTPUT_NAME pmemfile-posix)
-set_target_properties(pmemfile-posix_shared PROPERTIES VERSION ${VERSION} SOVERSION ${VERSION_MAJOR})
+set_target_properties(pmemfile-pop_shared PROPERTIES OUTPUT_NAME pmemfile-pop)
+set_target_properties(pmemfile-pop_shared PROPERTIES VERSION ${VERSION} SOVERSION ${VERSION_MAJOR})
 
-add_cstyle(pmemfile-posix)
-add_check_whitespace(pmemfile-posix)
+add_cstyle(pmemfile-pop)
+add_check_whitespace(pmemfile-pop)

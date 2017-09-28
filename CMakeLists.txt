@@ -60,10 +60,9 @@ option(LONG_TESTS "build long running tests as well" OFF)
 option(AUTO_GENERATE_SOURCES
 	"Use libclang to (re)generate certain source files -- this is required for the modification of some sources (e.g. libpmemfile-posix-wrappers.h must be regenerated each time libpmemfile-posix.h is modified" OFF)
 
-option(LIBPMEMFILE_POP "use libpmemfile_pop (libpmemfile_posix_over_posix) library" OFF)
+option(BUILD_LIBPMEMFILE_POP "build libpmemfile_pop (libpmemfile_posix_over_posix) library" OFF)
 
-cmake_dependent_option(BUILD_PMEMFILE_FUSE "build pmemfile-fuse (requires libfuse)" ON
-			"NOT LIBPMEMFILE_POP" OFF)
+option(BUILD_PMEMFILE_FUSE "build pmemfile-fuse (requires libfuse)" ON)
 
 set(TEST_DIR ${CMAKE_CURRENT_BINARY_DIR}/test
 	CACHE STRING "working directory for tests")
@@ -478,16 +477,11 @@ if(AUTO_GENERATE_SOURCES)
 	add_subdirectory(utils/transform)
 endif()
 
-if (LIBPMEMFILE_POP AND BUILD_LIBPMEMFILE)
-	message(FATAL_ERROR "libpmemfile-pop is currently incompatible with libpmemfile"
-		"\nPlease set BUILD_LIBPMEMFILE to 0")
+if (BUILD_LIBPMEMFILE_POP)
+	add_subdirectory(tests/libpmemfile-pop)
 endif()
 
-if (LIBPMEMFILE_POP)
-	add_subdirectory(tests/libpmemfile-pop)
-else()
-	add_subdirectory(src/libpmemfile-posix)
-endif()
+add_subdirectory(src/libpmemfile-posix)
 
 if(BUILD_LIBPMEMFILE)
 	add_subdirectory(src/libpmemfile)
